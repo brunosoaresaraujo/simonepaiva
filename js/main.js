@@ -121,6 +121,50 @@ document.addEventListener("DOMContentLoaded", () => {
       if (aboutVisual) scrollObserver.observe(aboutVisual);
       if (aboutContent) scrollObserver.observe(aboutContent);
 
+      // 6c. FAQ Section - header reveal + accordion toggle behaviour
+      const faqHeader = document.getElementById("faq-header");
+      const faqItems = document.querySelectorAll(".faq-item");
+
+      if (faqHeader) scrollObserver.observe(faqHeader);
+
+      faqItems.forEach((item, index) => {
+        item.style.transitionDelay = `${(index % 4) * 0.08}s`;
+        scrollObserver.observe(item);
+
+        const question = item.querySelector(".faq-question");
+        const answer = item.querySelector(".faq-answer");
+
+        question.addEventListener("click", () => {
+          const isOpen = item.classList.contains("open");
+
+          // Close every other item first (single-open accordion for a focused, editorial feel)
+          faqItems.forEach(other => {
+            if (other !== item && other.classList.contains("open")) {
+              other.classList.remove("open");
+              other.querySelector(".faq-answer").style.maxHeight = null;
+              other.querySelector(".faq-question").setAttribute("aria-expanded", "false");
+            }
+          });
+
+          if (isOpen) {
+            item.classList.remove("open");
+            answer.style.maxHeight = null;
+            question.setAttribute("aria-expanded", "false");
+          } else {
+            item.classList.add("open");
+            answer.style.maxHeight = `${answer.scrollHeight}px`;
+            question.setAttribute("aria-expanded", "true");
+          }
+        });
+      });
+
+      // 6d. Footer columns - staggered reveal
+      const footerCols = document.querySelectorAll(".footer-brand, .footer-col");
+      footerCols.forEach((col, index) => {
+        col.style.transitionDelay = `${(index % 4) * 0.1}s`;
+        scrollObserver.observe(col);
+      });
+
       // Launch mouse parallax only if on desktop (avoid touch device recalculations)
 // Launch mouse parallax only if on desktop (avoid touch device recalculations)
       if (window.innerWidth > 1024) {
@@ -157,4 +201,52 @@ document.addEventListener("DOMContentLoaded", () => {
       }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
 
       navSections.forEach(section => navSpyObserver.observe(section));
+
+      // 8. Mobile Menu - hamburger toggle, link-close and outside-click-close
+      const mobileToggle = document.getElementById("mobile-toggle");
+      const navMenu = document.getElementById("nav-menu");
+
+      function closeMobileMenu() {
+        navMenu.classList.remove("open");
+        mobileToggle.classList.remove("active");
+        mobileToggle.setAttribute("aria-expanded", "false");
+        mobileToggle.setAttribute("aria-label", "Abrir Menu");
+      }
+
+      function openMobileMenu() {
+        navMenu.classList.add("open");
+        mobileToggle.classList.add("active");
+        mobileToggle.setAttribute("aria-expanded", "true");
+        mobileToggle.setAttribute("aria-label", "Fechar Menu");
+      }
+
+      if (mobileToggle && navMenu) {
+        mobileToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (navMenu.classList.contains("open")) {
+            closeMobileMenu();
+          } else {
+            openMobileMenu();
+          }
+        });
+
+        // Close the dropdown whenever a link inside it is tapped (smooth-scroll already fires above)
+        navMenu.querySelectorAll("a").forEach(link => {
+          link.addEventListener("click", () => closeMobileMenu());
+        });
+
+        // Close when tapping anywhere outside the open menu
+        document.addEventListener("click", (e) => {
+          if (navMenu.classList.contains("open") && !navMenu.contains(e.target) && !mobileToggle.contains(e.target)) {
+            closeMobileMenu();
+          }
+        });
+
+        // Close automatically if the viewport grows back into desktop size
+        window.addEventListener("resize", () => {
+          if (window.innerWidth > 768 && navMenu.classList.contains("open")) {
+            closeMobileMenu();
+          }
+        });
+      }
     });
